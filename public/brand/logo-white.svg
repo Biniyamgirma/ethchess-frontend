@@ -1,0 +1,6 @@
+<!-- TODO: replace with official asset. Placeholder white lockup for dark surfaces. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" fill="none">
+  <path fill="#00A86B" d="m9 10 8 7 10-9 10 9 10-7-2 15H11L9 10Z"/>
+  <path fill="#FFFCF1" d="M12 26h34l-3 8-4 3 3 8H16l5-11-9-8Zm14 3-5 6 5 2 5-5-5-3Z"/>
+  <text x="61" y="40" fill="#FFFCF1" font-family="Arial,sans-serif" font-size="25" font-weight="700" letter-spacing="1">ETHCHESS™</text>
+</svg>

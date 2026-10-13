@@ -1,0 +1,6 @@
+<!-- TODO: replace with official asset. The crown is intentionally part of the knight lockup. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <path fill="#00A86B" d="m13 13 8 7 10-9 10 9 10-7-2 15H15l-2-15Z"/>
+  <path fill="#080808" d="M16 29h34l-3 8-4 3 3 8H20l5-11-9-8Zm14 3-5 6 5 2 5-5-5-3Z"/>
+  <path fill="#080808" d="m25 39-5 9h20l-3-8-7 1-5-2Z"/>
+</svg>

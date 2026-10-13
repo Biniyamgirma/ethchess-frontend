@@ -1,0 +1,6 @@
+<!-- TODO: replace with official asset. Placeholder white vertical brand lockup. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 130" fill="none">
+  <path fill="#00A86B" d="m58 13 12 10 15-14 15 14 15-10-3 22H61l-3-22Z"/>
+  <path fill="#FFFCF1" d="M62 36h45l-4 11-5 5 4 12H68l7-17-13-11Zm19 4-7 9 7 3 7-8-7-4Z"/>
+  <text x="90" y="103" text-anchor="middle" fill="#FFFCF1" font-family="Arial,sans-serif" font-size="23" font-weight="700" letter-spacing="1">ETHCHESS™</text>
+</svg>

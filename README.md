@@ -1,36 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EthChess Admin
 
-## Getting Started
+An internal admin dashboard for the EthChess youth chess club. Built with Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui, TanStack Query/Table, React Hook Form, and Zod.
 
-First, run the development server:
+## Run locally
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Install dependencies with `npm install`.
+2. Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_API_BASE_URL` to the backend origin (defaults to `http://localhost:4000`).
+3. Start the backend, then run `npm run dev`.
+4. Open `http://localhost:3000`. Sign in with the admin first name and password configured in the backend.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Useful checks: `npm run lint`, `npm run format:check`, and `npm run build`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Backend integration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Requests use the backend's cookie-based admin session (`withCredentials: true`); the JWT remains in the backend's HttpOnly cookie.
 
-## Learn More
+Connected routes include admin login and role management, member list/update/removal, venue list/create/update, and venue-owner create/update. Events, bookings, the venue-owner directory, and the dashboard summary currently have no matching backend list endpoints. These screens call typed mock functions in `src/lib/api/` with `TODO: confirm endpoint` markers; sample content is labeled in the UI and is not persisted.
 
-To learn more about Next.js, take a look at the following resources:
+Admin permissions remain enforced by the backend. For example, owner and venue creation and admin role mutations may require elevated admin levels.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Brand assets and fonts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The logo SVGs under `public/brand/` are clearly marked placeholders and should be replaced with the official EthChess lockups. Satoshi font weights are locally hosted under `public/fonts/satoshi/`; Space Grotesk is loaded with `next/font/google`.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The hidden `/design-check` route is available during development to review the themed UI kit and returns not found in production.
