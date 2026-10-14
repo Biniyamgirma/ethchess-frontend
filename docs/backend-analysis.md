@@ -9,7 +9,7 @@ For the complete inventory of registered backend routes (including admin, vendor
 - Backend: TypeScript, Express 5, Prisma ORM, PostgreSQL, Zod validation.
 - Entry point: `src/server.ts`; routes are mounted under `/api` (or `/api/<resource>`).
 - No OpenAPI/Swagger spec, Postman collection, or backend `docs/` directory was present. `README.md` only describes the service generally, so route/controller/validator/service code and the Prisma contract are the source of truth.
-- API origin: backend listens on `PORT`, default `4000`. Frontend base URL should be configured with `NEXT_PUBLIC_API_BASE_URL` (origin only, e.g. `http://localhost:4000`); resource calls include `/api/...`.
+- API origin: backend listens on `PORT`, default `4000`. Configure `NEXT_PUBLIC_API_BASE_URL` as the backend origin (e.g. `http://localhost:4000`). The frontend proxies `/api/...` through its own origin so browser auth cookies remain first-party.
 - CORS reflects the requesting origin and allows credentials. JSON body limit is 1 MB. Rate limit: 200 requests per 15 minutes.
 - Dates are stored as timestamps. Most member endpoints return ORM dates directly; one Telegram-profile endpoint formats dates in `Africa/Addis_Ababa`. Display dates in `Africa/Addis_Ababa` where appropriate. Prices and match charges are integer ETB values, although the backend does not enforce a currency code.
 - Standard success envelope: `{ success: true, data: ... }`, optionally with `message`. Login instead returns `{ success: true, message, data: { user } }`.

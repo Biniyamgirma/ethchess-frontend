@@ -1,9 +1,9 @@
 import axios from "axios";
-import { env } from "@/config/env";
 import { clearMemberSession } from "@/lib/auth/member-storage";
+import { clearAdminUser } from "@/lib/auth/storage";
 
 export const apiClient = axios.create({
-  baseURL: env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: "",
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
@@ -61,6 +61,24 @@ apiClient.interceptors.response.use(
           if (!window.location.pathname.startsWith("/member/login")) {
             window.location.replace("/member/login");
           }
+        } else if (
+          window.location.pathname !== "/login" &&
+          (window.location.pathname.startsWith("/dashboard") ||
+            [
+              "/members",
+              "/venue-owners",
+              "/venues",
+              "/events",
+              "/bookings",
+              "/settings",
+            ].some(
+              (path) =>
+                window.location.pathname === path ||
+                window.location.pathname.startsWith(`${path}/`),
+            ))
+        ) {
+          clearAdminUser();
+          window.location.replace("/login");
         }
       }
 

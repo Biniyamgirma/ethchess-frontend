@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export function proxy(request: NextRequest) {
-  const hasSession = Boolean(request.cookies.get("token")?.value);
-  const hasAdminSession =
-    hasSession || Boolean(request.cookies.get("ethchess_admin")?.value);
+  const hasAdminSession = Boolean(
+    request.cookies.get("ethchess_admin")?.value,
+  );
   const isLoginPage = request.nextUrl.pathname === "/login";
   const isMemberLogin = request.nextUrl.pathname === "/member/login";
   const isMemberRegister = request.nextUrl.pathname === "/member/register";

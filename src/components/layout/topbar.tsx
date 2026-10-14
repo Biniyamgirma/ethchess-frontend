@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -75,7 +76,9 @@ export function Topbar() {
               }
             />
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuLabel>{name}</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>{name}</DropdownMenuLabel>
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => router.push("/settings")}>
                 <UserRound /> Settings

@@ -48,28 +48,25 @@ export default function DashboardPage() {
   }
 
   const data = summary.data;
+  const maxActivity = Math.max(1, ...data.activity.map((point) => point.value));
   return (
     <div>
       <PageHeader
         title="The club, at a glance"
         description="Here’s what’s happening across the EthChess community."
         action={
-          <Button render={<Link href="/members" />}>
+          <Button nativeButton={false} render={<Link href="/members" />}>
             Meet your members <ArrowUpRight />
           </Button>
         }
       />
-      <p className="mb-5 rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 text-xs text-accent-foreground">
-        Snapshot values are sample data until the backend adds an admin
-        dashboard summary endpoint.
-      </p>
       <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Club members"
           value={data.members.toLocaleString()}
           detail="Players in the community"
           icon={Users}
-          trend={`+${data.memberChange}%`}
+          trend={`${data.memberChange >= 0 ? "+" : ""}${data.memberChange}%`}
         />
         <StatCard
           label="Venue owners"
@@ -114,7 +111,9 @@ export default function DashboardPage() {
                   </span>
                   <div
                     className="w-full max-w-10 rounded-t-md bg-primary/80"
-                    style={{ height: `${point.value}%` }}
+                    style={{
+                      height: `${point.value === 0 ? 0 : Math.max(4, (point.value / maxActivity) * 100)}%`,
+                    }}
                   />
                   <span className="text-[10px] font-medium text-muted-foreground">
                     {point.label}
@@ -139,30 +138,45 @@ export default function DashboardPage() {
                 Say hey to the newest players.
               </p>
             </div>
-            <Button render={<Link href="/members" />} variant="ghost" size="sm">
+            <Button
+              nativeButton={false}
+              render={<Link href="/members" />}
+              variant="ghost"
+              size="sm"
+            >
               All members <ArrowUpRight />
             </Button>
           </CardHeader>
           <CardContent className="divide-y px-5">
-            {data.recentMembers.map((member) => (
-              <div key={member.id} className="flex items-center gap-3 py-4">
-                <Avatar className="size-9">
-                  <AvatarFallback className="bg-muted font-heading text-xs font-semibold">
-                    {member.f_name?.slice(0, 1) ?? "?"}
-                    {member.l_name?.slice(0, 1) ?? ""}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">
-                    {member.f_name} {member.l_name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {member.createdAt}
-                  </p>
+            {data.recentMembers.length === 0 ? (
+              <p className="py-6 text-sm text-muted-foreground">
+                No members have joined yet.
+              </p>
+            ) : (
+              data.recentMembers.map((member) => (
+                <div key={member.id} className="flex items-center gap-3 py-4">
+                  <Avatar className="size-9">
+                    <AvatarFallback className="bg-muted font-heading text-xs font-semibold">
+                      {member.f_name?.slice(0, 1) ?? "?"}
+                      {member.l_name?.slice(0, 1) ?? ""}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {member.f_name} {member.l_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {member.createdAt
+                        ? new Intl.DateTimeFormat(undefined, {
+                            dateStyle: "medium",
+                          }).format(new Date(member.createdAt))
+                        : "Date unavailable"}
+                    </p>
+                  </div>
+                  <StatusBadge tone="success">New</StatusBadge>
                 </div>
-                <StatusBadge tone="success">New</StatusBadge>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
@@ -181,6 +195,7 @@ export default function DashboardPage() {
         </div>
         <div className="mt-5 flex gap-3 sm:mt-0">
           <Button
+            nativeButton={false}
             render={<Link href="/venue-owners" />}
             variant="outline"
             className="border-white/30 text-white hover:bg-white hover:text-black"

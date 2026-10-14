@@ -1,16 +1,37 @@
 "use client";
 
 import Image from "next/image";
-import { useTheme } from "next-themes";
+import { useSyncExternalStore } from "react";
 
 type LogoProps = {
   variant?: "horizontal" | "vertical" | "icon";
   className?: string;
 };
 
+function subscribeToTheme(callback: () => void) {
+  const observer = new MutationObserver(callback);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+  return () => observer.disconnect();
+}
+
+function getThemeSnapshot() {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
+function getServerThemeSnapshot() {
+  return "light";
+}
+
 export function Logo({ variant = "horizontal", className }: LogoProps) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const theme = useSyncExternalStore(
+    subscribeToTheme,
+    getThemeSnapshot,
+    getServerThemeSnapshot,
+  );
+  const isDark = theme === "dark";
   const src =
     variant === "icon"
       ? isDark

@@ -22,6 +22,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -134,7 +135,9 @@ export function AppSidebar() {
             }
           />
           <DropdownMenuContent side="top" align="start" className="w-56">
-            <DropdownMenuLabel>{name}</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{name}</DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push("/settings")}>
               <Settings /> Profile & settings

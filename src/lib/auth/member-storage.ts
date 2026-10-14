@@ -8,7 +8,9 @@ const listeners = new Set<() => void>();
 
 export function getMemberSession(): MemberSession | null {
   if (typeof window === "undefined") return null;
-  const raw = window.sessionStorage.getItem(MEMBER_KEY);
+  const raw =
+    window.localStorage.getItem(MEMBER_KEY) ??
+    window.sessionStorage.getItem(MEMBER_KEY);
   if (raw === cachedRaw) return cachedSession;
   cachedRaw = raw;
   cachedSession = null;
@@ -25,14 +27,20 @@ export function getMemberSession(): MemberSession | null {
       typeof value.name === "string"
     ) {
       cachedSession = { id: value.id, name: value.name, role: "member" };
+      window.localStorage.setItem(MEMBER_KEY, raw);
+      window.sessionStorage.removeItem(MEMBER_KEY);
       return cachedSession;
     }
+    window.localStorage.removeItem(MEMBER_KEY);
     window.sessionStorage.removeItem(MEMBER_KEY);
     cachedRaw = null;
+    document.cookie = `${MEMBER_ROUTE_COOKIE}=; Path=/member; Max-Age=0; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
     return cachedSession;
   } catch {
+    window.localStorage.removeItem(MEMBER_KEY);
     window.sessionStorage.removeItem(MEMBER_KEY);
     cachedRaw = null;
+    document.cookie = `${MEMBER_ROUTE_COOKIE}=; Path=/member; Max-Age=0; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
     return cachedSession;
   }
 }
@@ -40,7 +48,10 @@ export function getMemberSession(): MemberSession | null {
 export function saveMemberSession(session: MemberSession) {
   cachedRaw = JSON.stringify(session);
   cachedSession = session;
-  window.sessionStorage.setItem(MEMBER_KEY, cachedRaw);
+  window.localStorage.setItem(MEMBER_KEY, cachedRaw);
+  window.localStorage.removeItem("ethchess-admin-user");
+  window.sessionStorage.removeItem("ethchess-admin-user");
+  document.cookie = `ethchess_admin=; Path=/; Max-Age=0; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
   document.cookie = `${MEMBER_ROUTE_COOKIE}=1; Path=/member; Max-Age=604800; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
   listeners.forEach((listener) => listener());
 }
@@ -48,7 +59,11 @@ export function saveMemberSession(session: MemberSession) {
 export function clearMemberSession() {
   cachedRaw = null;
   cachedSession = null;
+  window.localStorage.removeItem(MEMBER_KEY);
   window.sessionStorage.removeItem(MEMBER_KEY);
+  window.localStorage.removeItem("ethchess-admin-user");
+  window.sessionStorage.removeItem("ethchess-admin-user");
+  document.cookie = `ethchess_admin=; Path=/; Max-Age=0; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
   document.cookie = `${MEMBER_ROUTE_COOKIE}=; Path=/member; Max-Age=0; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
   listeners.forEach((listener) => listener());
 }

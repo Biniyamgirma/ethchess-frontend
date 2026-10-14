@@ -12,6 +12,7 @@ export default function HomePage() {
           alt="EthChess™"
           width={164}
           height={34}
+          style={{ height: "auto" }}
           priority
         />
         <div className="relative z-10 max-w-xl py-20">
