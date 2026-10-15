@@ -68,7 +68,7 @@ apiClient.interceptors.response.use(
               "/members",
               "/venue-owners",
               "/venues",
-              "/events",
+              "/brilliant-moves",
               "/bookings",
               "/settings",
             ].some(

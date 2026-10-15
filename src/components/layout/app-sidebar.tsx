@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Settings } from "lucide-react";
 import { toast } from "sonner";
@@ -32,6 +33,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { logoutAdmin } from "@/lib/api/auth";
+import { getCurrentAdminAccess } from "@/lib/api/admin";
 import { ThemeMenuAction } from "@/components/layout/theme-toggle";
 
 export function AppSidebar() {
@@ -39,6 +41,21 @@ export function AppSidebar() {
   const router = useRouter();
   const { state } = useSidebar();
   const { user, clearUser } = useAuth();
+  const adminAccess = useQuery({
+    queryKey: ["current-admin-access"],
+    queryFn: getCurrentAdminAccess,
+    enabled: Boolean(user),
+  });
+  const visibleNavSections = navSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter(
+        (item) =>
+          item.href !== "/venue-owners" ||
+          (adminAccess.data?.admin_level ?? 0) > 2,
+      ),
+    }))
+    .filter((section) => section.items.length > 0);
   const name = user
     ? `${user.f_name} ${user.l_name ?? ""}`.trim()
     : "Club admin";
@@ -79,7 +96,7 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="px-2 py-4">
-        {navSections.map((section) => (
+        {visibleNavSections.map((section) => (
           <SidebarGroup key={section.title} className="py-1">
             <SidebarGroupLabel className="px-3 font-heading text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/45">
               {section.title}

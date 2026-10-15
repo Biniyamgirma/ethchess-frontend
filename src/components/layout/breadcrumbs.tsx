@@ -16,7 +16,7 @@ const labels: Record<string, string> = {
   members: "Members",
   "venue-owners": "Venue owners",
   venues: "Venues",
-  events: "Events & tournaments",
+  "brilliant-moves": "Brilliant Move",
   bookings: "Bookings",
   settings: "Settings",
 };

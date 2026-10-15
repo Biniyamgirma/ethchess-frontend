@@ -23,7 +23,7 @@ export function proxy(request: NextRequest) {
       "/members",
       "/venue-owners",
       "/venues",
-      "/events",
+      "/brilliant-moves",
       "/bookings",
       "/settings",
     ].some(

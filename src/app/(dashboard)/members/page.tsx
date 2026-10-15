@@ -2,11 +2,12 @@
 
 import { createColumnHelper } from "@tanstack/react-table";
 import {
-  ArrowDownRight,
-  ArrowUpRight,
+  Ban,
   MoreHorizontal,
-  Users,
+  Trash2,
+  UserCheck,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/shared/data-table";
@@ -20,13 +21,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemberActions, useMembers } from "@/hooks/use-members";
-import type { Member } from "@/types/api";
+import { getCurrentAdminAccess } from "@/lib/api/admin";
+import { MEMBER_STATUS, type Member } from "@/types/api";
 
 const column = createColumnHelper<Member>();
 
 export default function MembersPage() {
   const members = useMembers();
   const actions = useMemberActions();
+  const adminAccess = useQuery({
+    queryKey: ["current-admin-access"],
+    queryFn: getCurrentAdminAccess,
+  });
+  const canManageMembers = (adminAccess.data?.admin_level ?? 0) > 5;
   const columns = useMemo(
     () => [
       column.accessor(
@@ -52,7 +59,13 @@ export default function MembersPage() {
       }),
       column.accessor(
         (row) =>
-          row.is_deleted ? "Inactive" : row.status === 0 ? "Pending" : "Active",
+          row.is_deleted
+            ? "Deleted"
+            : row.status === MEMBER_STATUS.blocked
+              ? "Blocked"
+              : row.status === MEMBER_STATUS.pending
+                ? "Pending"
+                : "Active",
         {
           id: "status",
           header: "Status",
@@ -61,6 +74,8 @@ export default function MembersPage() {
               tone={
                 getValue() === "Active"
                   ? "success"
+                  : getValue() === "Blocked"
+                    ? "danger"
                   : getValue() === "Pending"
                     ? "danger"
                     : "neutral"
@@ -76,9 +91,11 @@ export default function MembersPage() {
         header: "",
         cell: ({ row }) => {
           const member = row.original;
-          if (member.is_deleted) {
+          if (member.is_deleted || !canManageMembers) {
             return (
-              <span className="text-xs text-muted-foreground">Removed</span>
+              <span className="text-xs text-muted-foreground">
+                {member.is_deleted ? "Deleted" : "—"}
+              </span>
             );
           }
           return (
@@ -97,35 +114,49 @@ export default function MembersPage() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={() =>
-                    actions.update.mutate({
+                    actions.block.mutate({
                       id: member.id,
-                      status: member.status === 0 ? 1 : 0,
+                      isBlocked: member.status !== MEMBER_STATUS.blocked,
                     })
                   }
                 >
-                  {member.status === 0 ? (
-                    <>
-                      <ArrowUpRight /> Activate player
-                    </>
-                  ) : (
-                    <>
-                      <ArrowDownRight /> Set pending
-                    </>
-                  )}
+                  <Ban />
+                  {member.status === MEMBER_STATUS.blocked
+                    ? "Unblock member"
+                    : "Block member"}
                 </DropdownMenuItem>
+                {member.is_member === 1 ? (
+                  <DropdownMenuItem disabled>
+                    <UserCheck /> Official member
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          `Approve ${member.f_name ?? "this player"} as an official member?`,
+                        )
+                      ) {
+                        actions.approveOfficial.mutate(member.id);
+                      }
+                    }}
+                  >
+                    <UserCheck /> Approve to official member
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   variant="destructive"
                   onClick={() => {
                     if (
                       window.confirm(
-                        `Remove ${member.f_name ?? "this player"} from the club?`,
+                        `Delete ${member.f_name ?? "this player"}? Their account data will be retained.`,
                       )
                     ) {
                       actions.remove.mutate(member.id);
                     }
                   }}
                 >
-                  <Users /> Remove from club
+                  <Trash2 /> Delete member
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -133,7 +164,7 @@ export default function MembersPage() {
         },
       }),
     ],
-    [actions],
+    [actions, canManageMembers],
   );
 
   if (members.isPending)
@@ -156,6 +187,11 @@ export default function MembersPage() {
         title="Members"
         description="The people who make EthChess what it is. Keep them playing."
       />
+      {adminAccess.isError ? (
+        <p role="alert" className="mb-5 rounded-xl border border-destructive/40 p-4 text-sm">
+          Member action permissions could not be checked: {adminAccess.error.message}
+        </p>
+      ) : null}
       <DataTable
         columns={columns}
         data={members.data}

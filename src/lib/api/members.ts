@@ -14,6 +14,21 @@ export async function updateMember(id: string, input: Partial<Member>) {
   return response.data.data;
 }
 
+export async function setMemberBlocked(id: string, isBlocked: boolean) {
+  const response = await apiClient.patch<ApiResponse<Member>>(
+    `/api/members/${encodeURIComponent(id)}/block`,
+    { is_blocked: isBlocked },
+  );
+  return response.data.data;
+}
+
+export async function approveOfficialMember(id: string) {
+  const response = await apiClient.post<ApiResponse<Member>>(
+    `/api/members/${encodeURIComponent(id)}/approve-official`,
+  );
+  return response.data.data;
+}
+
 export async function removeMember(id: string) {
   const response = await apiClient.delete<ApiResponse<Member>>(
     `/api/members/${encodeURIComponent(id)}`,

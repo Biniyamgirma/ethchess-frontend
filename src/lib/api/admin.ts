@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api/client";
-import type { AdminRole, AdminUser, ApiResponse } from "@/types/api";
+import type { AdminAccess, AdminRole, AdminUser, ApiResponse } from "@/types/api";
 
 export async function loginAdmin(input: { f_name: string; password: string }) {
   const response = await apiClient.post<ApiResponse<{ user: AdminUser }>>(
@@ -7,6 +7,13 @@ export async function loginAdmin(input: { f_name: string; password: string }) {
     input,
   );
   return response.data.data.user;
+}
+
+export async function getCurrentAdminAccess() {
+  const response = await apiClient.get<ApiResponse<AdminAccess>>(
+    "/api/admins/me",
+  );
+  return response.data.data;
 }
 
 export async function getAdminRoles() {

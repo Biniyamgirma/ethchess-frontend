@@ -142,12 +142,13 @@ export function useSubmitBrilliantMove() {
 export function useVoteForBrilliantMove() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: voteForBrilliantMove,
+    mutationFn: ({ id, hasVoted }: { id: number; hasVoted: boolean }) =>
+      voteForBrilliantMove(id, hasVoted),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: memberKeys.brilliantMoves,
       });
-      toast.success("Vote locked in. Good eye.");
+      toast.success("Your vote was updated.");
     },
     onError: (error: Error) => toast.error(error.message),
   });

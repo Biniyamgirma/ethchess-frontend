@@ -11,6 +11,10 @@ export interface AdminUser {
   l_name?: string | null;
 }
 
+export interface AdminAccess {
+  admin_level: number;
+}
+
 export interface Member {
   id: string;
   f_name?: string | null;
@@ -19,8 +23,15 @@ export interface Member {
   eth_chess_rating?: number | null;
   status?: number | null;
   is_deleted?: number | null;
+  is_member?: number | null;
   createdAt?: string | null;
 }
+
+export const MEMBER_STATUS = {
+  pending: 0,
+  active: 1,
+  blocked: 2,
+} as const;
 
 export interface VenueOwner {
   id: number;
@@ -28,7 +39,10 @@ export interface VenueOwner {
   l_name?: string | null;
   email?: string | null;
   phone_number?: string | null;
+  telegram_username?: string | null;
+  whats_up_username?: string | null;
   venue_id?: number | null;
+  status?: number | null;
 }
 
 export interface Venue {
@@ -54,14 +68,6 @@ export interface DashboardSummary {
   memberChange: number;
   recentMembers: Pick<Member, "id" | "f_name" | "l_name" | "createdAt">[];
   activity: { label: string; value: number }[];
-}
-
-export interface ClubEvent {
-  id: string;
-  name: string;
-  venue: string;
-  date: string;
-  status: "Upcoming" | "Completed" | "Draft";
 }
 
 export interface ClubBooking {

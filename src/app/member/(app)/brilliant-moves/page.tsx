@@ -41,15 +41,6 @@ export default function BrilliantMovesPage() {
     submit.mutate(values, { onSuccess: () => reset() });
   }
 
-  const hasVotedThisWeek = Boolean(
-    session?.id &&
-    moves.data?.some(
-      (item) =>
-        isInCurrentAddisWeek(item.createdAt) &&
-        item.votes?.some((entry) => entry.user_id === session.id),
-    ),
-  );
-
   return (
     <>
       <MemberHero
@@ -114,11 +105,7 @@ export default function BrilliantMovesPage() {
           <div className="grid gap-3">
             {moves.data.map((move) => {
               const isOwnMove = move.user_id === session?.id;
-              const hasVoted = Boolean(
-                session?.id &&
-                move.votes?.some((item) => item.user_id === session.id),
-              );
-              const isCurrentWeek = isInCurrentAddisWeek(move.createdAt);
+              const hasVoted = move.current_user_voted;
               const url = safeHttpUrl(move.move_url);
               return (
                 <Card key={move.id} className="shadow-none">
@@ -132,8 +119,9 @@ export default function BrilliantMovesPage() {
                           {move.platform || "Community move"}
                         </h3>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          {move.vote_count}{" "}
-                          {move.vote_count === 1 ? "vote" : "votes"}
+                          {move.total_votes} total{" "}
+                          {move.total_votes === 1 ? "vote" : "votes"} ·{" "}
+                          {move.admin_votes} Admin votes
                           {move.week_number
                             ? ` · Week ${move.week_number}`
                             : ""}
@@ -156,23 +144,26 @@ export default function BrilliantMovesPage() {
                       className="min-h-11 shrink-0"
                       disabled={
                         isOwnMove ||
-                        hasVoted ||
-                        hasVotedThisWeek ||
-                        !isCurrentWeek ||
                         vote.isPending
                       }
-                      onClick={() => vote.mutate(move.id)}
+                      aria-label={
+                        isOwnMove
+                          ? "You cannot vote on your own move"
+                          : hasVoted
+                            ? `Remove your vote from ${move.platform || "this move"}`
+                            : `Vote for ${move.platform || "this move"}`
+                      }
+                      aria-pressed={hasVoted}
+                      onClick={() =>
+                        vote.mutate({ id: move.id, hasVoted })
+                      }
                     >
                       <MoveUpRight />
                       {isOwnMove
                         ? "Your move"
                         : hasVoted
-                          ? "You voted"
-                          : hasVotedThisWeek
-                            ? "Vote used"
-                            : isCurrentWeek
-                              ? "Drop a vote"
-                              : "Voting closed"}
+                          ? "Remove vote"
+                          : "Vote"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -183,26 +174,6 @@ export default function BrilliantMovesPage() {
       </section>
     </>
   );
-}
-
-function isInCurrentAddisWeek(value: string) {
-  const weekKey = (input: Date) => {
-    const parts = new Intl.DateTimeFormat("en-US", {
-      timeZone: "Africa/Addis_Ababa",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-    }).formatToParts(input);
-    const part = (type: Intl.DateTimeFormatPartTypes) =>
-      Number(parts.find((item) => item.type === type)?.value);
-    const localDate = new Date(
-      Date.UTC(part("year"), part("month") - 1, part("day")),
-    );
-    const weekday = localDate.getUTCDay() || 7;
-    localDate.setUTCDate(localDate.getUTCDate() - weekday + 1);
-    return localDate.toISOString().slice(0, 10);
-  };
-  return weekKey(new Date(value)) === weekKey(new Date());
 }
 
 function safeHttpUrl(value: string | null) {

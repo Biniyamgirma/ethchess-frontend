@@ -33,7 +33,7 @@ export const navSections: NavSection[] = [
   {
     title: "Club",
     items: [
-      { title: "Events & tournaments", href: "/events", icon: Trophy },
+      { title: "Brilliant Move", href: "/brilliant-moves", icon: Trophy },
       { title: "Bookings", href: "/bookings", icon: CalendarCheck },
     ],
   },
