@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ActivityOverview } from "@/components/dashboard/activity-overview";
 import { getDashboardSummary } from "@/lib/api/dashboard";
 
 export default function DashboardPage() {
@@ -180,6 +181,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ActivityOverview />
 
       <div className="mt-6 rounded-xl bg-[#080808] p-6 text-[#FFFCF1] sm:flex sm:items-center sm:justify-between sm:p-8">
         <div>

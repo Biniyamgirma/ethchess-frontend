@@ -2,13 +2,16 @@
 
 import { createColumnHelper } from "@tanstack/react-table";
 import {
+  BadgeCheck,
   Ban,
   MoreHorizontal,
   Trash2,
+  UserRoundSearch,
   UserCheck,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { MemberDetailsDialog } from "@/components/members/member-details-dialog";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/shared/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -27,6 +30,7 @@ import { MEMBER_STATUS, type Member } from "@/types/api";
 const column = createColumnHelper<Member>();
 
 export default function MembersPage() {
+  const [memberDetailsId, setMemberDetailsId] = useState<string | null>(null);
   const members = useMembers();
   const actions = useMemberActions();
   const adminAccess = useQuery({
@@ -76,9 +80,9 @@ export default function MembersPage() {
                   ? "success"
                   : getValue() === "Blocked"
                     ? "danger"
-                  : getValue() === "Pending"
-                    ? "danger"
-                    : "neutral"
+                    : getValue() === "Pending"
+                      ? "danger"
+                      : "neutral"
               }
             >
               {getValue()}
@@ -86,6 +90,19 @@ export default function MembersPage() {
           ),
         },
       ),
+      column.accessor((row) => row.role ?? "—", {
+        id: "role",
+        header: "Role",
+        cell: ({ getValue }) =>
+          getValue() === "official-member" ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-xs font-medium text-sky-700 dark:text-sky-300">
+              <BadgeCheck className="size-3.5 fill-sky-500/15" />
+              official-member
+            </span>
+          ) : (
+            <span>{getValue()}</span>
+          ),
+      }),
       column.display({
         id: "actions",
         header: "",
@@ -112,6 +129,10 @@ export default function MembersPage() {
                 <MoreHorizontal />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setMemberDetailsId(member.id)}>
+                  <UserRoundSearch />
+                  View member details
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() =>
                     actions.block.mutate({
@@ -188,8 +209,12 @@ export default function MembersPage() {
         description="The people who make EthChess what it is. Keep them playing."
       />
       {adminAccess.isError ? (
-        <p role="alert" className="mb-5 rounded-xl border border-destructive/40 p-4 text-sm">
-          Member action permissions could not be checked: {adminAccess.error.message}
+        <p
+          role="alert"
+          className="mb-5 rounded-xl border border-destructive/40 p-4 text-sm"
+        >
+          Member action permissions could not be checked:{" "}
+          {adminAccess.error.message}
         </p>
       ) : null}
       <DataTable
@@ -198,6 +223,13 @@ export default function MembersPage() {
         searchPlaceholder="Search players..."
         emptyTitle="No members yet. Time to recruit."
         emptyDescription="New members will show up here once they join the club."
+      />
+      <MemberDetailsDialog
+        memberId={memberDetailsId}
+        open={memberDetailsId !== null}
+        onOpenChange={(open) => {
+          if (!open) setMemberDetailsId(null);
+        }}
       />
     </div>
   );

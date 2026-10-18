@@ -32,14 +32,16 @@ export async function loginMember(input: { phone: string; password: string }) {
 }
 
 export async function registerMember(input: {
-  f_name: string;
-  l_name: string;
+  f_name?: string;
+  l_name?: string;
   phone: string;
   password: string;
+  address?: string;
+  district?: number;
+  profile_picture?: string;
 }) {
   await apiClient.post("/api/members/register", {
     ...input,
-    role: "member",
   });
 }
 

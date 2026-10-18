@@ -16,6 +16,7 @@ import {
   useJoinVenueTable,
   useLeaveVenueTable,
   useMemberVenues,
+  useMemberActivity,
   useVenueTables,
 } from "@/hooks/use-member-data";
 import { useMemberSession } from "@/hooks/use-member-session";
@@ -29,6 +30,7 @@ export default function MemberVenueDetailPage() {
   const join = useJoinVenueTable();
   const leave = useLeaveVenueTable();
   const session = useMemberSession();
+  const memberActivity = useMemberActivity(Boolean(session));
 
   if (!Number.isInteger(venueId) || venueId <= 0) {
     return (
@@ -113,7 +115,10 @@ export default function MemberVenueDetailPage() {
         {tables.data && tables.data.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {tables.data.map((table) => {
-              const isWaiting = table.ideal_player === session?.id;
+              const isWaiting =
+                (memberActivity.data?.type === "waiting_table" &&
+                  memberActivity.data.table_id === table.id) ||
+                table.ideal_player === session?.id;
               const isPending =
                 (join.isPending && join.variables === table.id) ||
                 (leave.isPending && leave.variables === table.id);
@@ -148,25 +153,46 @@ export default function MemberVenueDetailPage() {
                         Sign in to join
                       </Button>
                     ) : isWaiting ? (
-                      <Button
-                        variant="outline"
-                        className="min-h-11"
-                        disabled={isPending}
-                        onClick={() => leave.mutate(table.id)}
-                      >
-                        {isPending ? "Leaving..." : "Leave the queue"}
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="secondary"
+                          className="min-h-11"
+                          disabled
+                        >
+                          Joined this table
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="min-h-11"
+                          disabled={isPending}
+                          onClick={() => leave.mutate(table.id)}
+                        >
+                          {isPending ? "Leaving..." : "Leave this table"}
+                        </Button>
+                      </div>
                     ) : (
                       <Button
                         className="min-h-11"
-                        disabled={!table.is_available || isPending}
+                        disabled={
+                          !table.is_available ||
+                          isPending ||
+                          memberActivity.isPending ||
+                          memberActivity.isError ||
+                          Boolean(memberActivity.data)
+                        }
                         onClick={() => join.mutate(table.id)}
                       >
-                        {isPending
-                          ? "Joining..."
-                          : table.is_available
-                            ? "Join this table"
-                            : "In a game"}
+                        {memberActivity.isPending
+                          ? "Checking your table..."
+                          : memberActivity.data
+                            ? "Already joined a table"
+                            : memberActivity.isError
+                              ? "Table status unavailable"
+                              : isPending
+                                ? "Joining..."
+                                : table.is_available
+                                  ? "Join this table"
+                                  : "In a game"}
                       </Button>
                     )}
                   </CardContent>

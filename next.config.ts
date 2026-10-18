@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  allowedDevOrigins: ['192.168.43.72'],
+  allowedDevOrigins: ["192.168.43.72", "192.168.1.143", "192.168.43.212"],
   async rewrites() {
     const backendUrl = (
       process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000"

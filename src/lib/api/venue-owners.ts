@@ -13,8 +13,8 @@ export interface CreateVenueOwnerInput {
   password: string;
   phone_number: string;
   email: string;
-  telegram_username: string;
-  whats_up_username: string;
+  telegram_username?: string;
+  whats_up_username?: string;
 }
 
 export type UpdateVenueOwnerInput = Partial<VenueOwner> & { password?: string };

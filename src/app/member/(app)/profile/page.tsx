@@ -1,7 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowUpRight, Link2, UserRound } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarClock,
+  Clock3,
+  Link2,
+  MapPin,
+  UserRound,
+} from "lucide-react";
 import { forwardRef, type InputHTMLAttributes } from "react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -11,8 +18,10 @@ import { MemberError, MemberLoading } from "@/components/shared/member-states";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useLinkChessAccounts,
+  useMemberMatchHistory,
   useMemberProfile,
   useUpdateMemberProfile,
 } from "@/hooks/use-member-data";
@@ -44,6 +53,7 @@ type AccountValues = z.infer<typeof accountSchema>;
 
 export default function MemberProfilePage() {
   const profile = useMemberProfile();
+  const matchHistory = useMemberMatchHistory();
   const update = useUpdateMemberProfile();
   const linkAccounts = useLinkChessAccounts();
   const {
@@ -111,108 +121,201 @@ export default function MemberProfilePage() {
         ) : null}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="shadow-none">
-          <CardContent className="p-5 sm:p-7">
-            <div className="mb-5 flex items-center gap-3">
-              <UserRound className="size-5 text-primary" />
-              <h2 className="font-heading text-lg font-bold">Your details</h2>
-            </div>
-            <form
-              className="space-y-4"
-              onSubmit={handleSubmit((values) => update.mutate(values))}
-            >
-              <ProfileField
-                id="profile-first-name"
-                label="First name"
-                error={errors.f_name?.message}
-                {...register("f_name")}
-              />
-              <ProfileField
-                id="profile-last-name"
-                label="Last name"
-                error={errors.l_name?.message}
-                {...register("l_name")}
-              />
-              <ProfileField
-                id="profile-phone"
-                label="Phone number"
-                error={errors.phone?.message}
-                inputMode="tel"
-                {...register("phone")}
-              />
-              <ProfileField
-                id="profile-address"
-                label="Address"
-                error={errors.address?.message}
-                {...register("address")}
-              />
-              <Button
-                type="submit"
-                className="min-h-11"
-                disabled={update.isPending}
-              >
-                {update.isPending ? "Saving..." : "Save changes"}
-                {!update.isPending ? <ArrowUpRight /> : null}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="details" className="gap-6">
+        <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto">
+          <TabsTrigger value="details" className="px-4 py-2">
+            Profile
+          </TabsTrigger>
+          <TabsTrigger value="match-history" className="px-4 py-2">
+            Match history
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="details">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card className="shadow-none">
+              <CardContent className="p-5 sm:p-7">
+                <div className="mb-5 flex items-center gap-3">
+                  <UserRound className="size-5 text-primary" />
+                  <h2 className="font-heading text-lg font-bold">
+                    Your details
+                  </h2>
+                </div>
+                <form
+                  className="space-y-4"
+                  onSubmit={handleSubmit((values) => update.mutate(values))}
+                >
+                  <ProfileField
+                    id="profile-first-name"
+                    label="First name"
+                    error={errors.f_name?.message}
+                    {...register("f_name")}
+                  />
+                  <ProfileField
+                    id="profile-last-name"
+                    label="Last name"
+                    error={errors.l_name?.message}
+                    {...register("l_name")}
+                  />
+                  <ProfileField
+                    id="profile-phone"
+                    label="Phone number"
+                    error={errors.phone?.message}
+                    inputMode="tel"
+                    {...register("phone")}
+                  />
+                  <ProfileField
+                    id="profile-address"
+                    label="Address"
+                    error={errors.address?.message}
+                    {...register("address")}
+                  />
+                  <Button
+                    type="submit"
+                    className="min-h-11"
+                    disabled={update.isPending}
+                  >
+                    {update.isPending ? "Saving..." : "Save changes"}
+                    {!update.isPending ? <ArrowUpRight /> : null}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
 
-        <Card className="shadow-none">
-          <CardContent className="p-5 sm:p-7">
-            <div className="mb-2 flex items-center gap-3">
-              <Link2 className="size-5 text-primary" />
-              <h2 className="font-heading text-lg font-bold">
-                Bring your chess accounts
-              </h2>
-            </div>
-            <p className="mb-5 text-sm leading-6 text-muted-foreground">
-              Link Chess.com or Lichess to sync the profile details available
-              from those sites.
+            <Card className="shadow-none">
+              <CardContent className="p-5 sm:p-7">
+                <div className="mb-2 flex items-center gap-3">
+                  <Link2 className="size-5 text-primary" />
+                  <h2 className="font-heading text-lg font-bold">
+                    Bring your chess accounts
+                  </h2>
+                </div>
+                <p className="mb-5 text-sm leading-6 text-muted-foreground">
+                  Link Chess.com or Lichess to sync the profile details
+                  available from those sites.
+                </p>
+                <form
+                  className="space-y-4"
+                  onSubmit={accountForm.handleSubmit((values) =>
+                    linkAccounts.mutate({
+                      ...(values.chessDotComUsername?.trim()
+                        ? {
+                            chessDotComUsername:
+                              values.chessDotComUsername.trim(),
+                          }
+                        : {}),
+                      ...(values.lichessUsername?.trim()
+                        ? { lichessUsername: values.lichessUsername.trim() }
+                        : {}),
+                    }),
+                  )}
+                >
+                  <ProfileField
+                    id="chess-com-username"
+                    label="Chess.com username"
+                    error={
+                      accountForm.formState.errors.chessDotComUsername?.message
+                    }
+                    {...accountForm.register("chessDotComUsername")}
+                  />
+                  <ProfileField
+                    id="lichess-username"
+                    label="Lichess username"
+                    error={
+                      accountForm.formState.errors.lichessUsername?.message
+                    }
+                    {...accountForm.register("lichessUsername")}
+                  />
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    className="min-h-11"
+                    disabled={linkAccounts.isPending}
+                  >
+                    {linkAccounts.isPending ? "Linking..." : "Link accounts"}
+                    {!linkAccounts.isPending ? <ArrowUpRight /> : null}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        <TabsContent value="match-history">
+          {matchHistory.isLoading ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">
+              Loading your match history...
             </p>
-            <form
-              className="space-y-4"
-              onSubmit={accountForm.handleSubmit((values) =>
-                linkAccounts.mutate({
-                  ...(values.chessDotComUsername?.trim()
-                    ? { chessDotComUsername: values.chessDotComUsername.trim() }
-                    : {}),
-                  ...(values.lichessUsername?.trim()
-                    ? { lichessUsername: values.lichessUsername.trim() }
-                    : {}),
-                }),
-              )}
+          ) : matchHistory.isError ? (
+            <p
+              role="alert"
+              className="py-10 text-center text-sm text-destructive"
             >
-              <ProfileField
-                id="chess-com-username"
-                label="Chess.com username"
-                error={
-                  accountForm.formState.errors.chessDotComUsername?.message
-                }
-                {...accountForm.register("chessDotComUsername")}
-              />
-              <ProfileField
-                id="lichess-username"
-                label="Lichess username"
-                error={accountForm.formState.errors.lichessUsername?.message}
-                {...accountForm.register("lichessUsername")}
-              />
-              <Button
-                type="submit"
-                variant="outline"
-                className="min-h-11"
-                disabled={linkAccounts.isPending}
-              >
-                {linkAccounts.isPending ? "Linking..." : "Link accounts"}
-                {!linkAccounts.isPending ? <ArrowUpRight /> : null}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+              {matchHistory.error.message}
+            </p>
+          ) : matchHistory.data?.length ? (
+            <div className="space-y-3">
+              {matchHistory.data.map((match) => (
+                <Card
+                  key={match.id}
+                  className={
+                    match.result === "won"
+                      ? "border-green-500/30 bg-green-500/5 shadow-none"
+                      : "border-red-500/30 bg-red-500/5 shadow-none"
+                  }
+                >
+                  <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                    <div>
+                      <p
+                        className={`font-heading font-bold ${
+                          match.result === "won"
+                            ? "text-green-700 dark:text-green-400"
+                            : "text-red-700 dark:text-red-400"
+                        }`}
+                      >
+                        {match.result === "won" ? "Victory" : "Defeat"}
+                      </p>
+                      <p className="mt-1 text-sm font-medium">
+                        {match.white_player_name}{" "}
+                        <span className="text-muted-foreground">vs</span>{" "}
+                        {match.black_player_name}
+                      </p>
+                    </div>
+                    <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-3 sm:gap-5">
+                      <p className="flex items-center gap-2">
+                        <Clock3 className="size-4 shrink-0" />
+                        {match.total_minutes}{" "}
+                        {match.total_minutes === 1 ? "minute" : "minutes"}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <MapPin className="size-4 shrink-0" />
+                        {match.venue_name}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <CalendarClock className="size-4 shrink-0" />
+                        {formatMatchDate(match.started_at)}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="py-10 text-center text-sm text-muted-foreground">
+              You do not have any completed matches yet.
+            </p>
+          )}
+        </TabsContent>
+      </Tabs>
     </>
   );
+}
+
+function formatMatchDate(value: string | null) {
+  if (!value) return "Date unavailable";
+  return new Intl.DateTimeFormat("en-ET", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Africa/Addis_Ababa",
+  }).format(new Date(value));
 }
 
 const ProfileField = forwardRef<

@@ -44,8 +44,8 @@ const ownerSchema = z.object({
   l_name: z.string().trim().min(1, "Add a last name."),
   email: z.string().trim().email("Enter a valid email."),
   phone_number: z.string().trim().min(5, "Enter a valid phone number."),
-  telegram_username: z.string().trim().min(2, "Add a Telegram username."),
-  whats_up_username: z.string().trim().min(2, "Add a WhatsApp username."),
+  telegram_username: z.string().trim().optional().or(z.literal("")),
+  whats_up_username: z.string().trim().optional().or(z.literal("")),
   password: z
     .string()
     .refine(
@@ -184,8 +184,8 @@ export default function VenueOwnersPage() {
             l_name: values.l_name,
             email: values.email,
             phone_number: values.phone_number,
-            telegram_username: values.telegram_username,
-            whats_up_username: values.whats_up_username,
+            telegram_username: values.telegram_username ?? "",
+            whats_up_username: values.whats_up_username ?? "",
             ...(values.password ? { password: values.password } : {}),
           },
         },
@@ -209,8 +209,8 @@ export default function VenueOwnersPage() {
         l_name: values.l_name,
         email: values.email,
         phone_number: values.phone_number,
-        telegram_username: values.telegram_username,
-        whats_up_username: values.whats_up_username,
+        telegram_username: values.telegram_username || "",
+        whats_up_username: values.whats_up_username || "",
         password: values.password,
       },
       {
@@ -340,7 +340,10 @@ export default function VenueOwnersPage() {
                   ) : null}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="owner-telegram">Telegram username</Label>
+                  <Label htmlFor="owner-telegram">
+                    Telegram username{" "}
+                    <span className="text-muted-foreground">(optional)</span>
+                  </Label>
                   <Input
                     id="owner-telegram"
                     placeholder="@test"
@@ -353,7 +356,10 @@ export default function VenueOwnersPage() {
                   ) : null}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="owner-whatsapp">WhatsApp username</Label>
+                  <Label htmlFor="owner-whatsapp">
+                    WhatsApp username{" "}
+                    <span className="text-muted-foreground">(optional)</span>
+                  </Label>
                   <Input
                     id="owner-whatsapp"
                     placeholder="@hello"

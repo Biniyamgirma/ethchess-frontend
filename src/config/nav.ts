@@ -2,6 +2,7 @@ import {
   CalendarCheck,
   LayoutDashboard,
   MapPin,
+  ShieldCheck,
   Settings,
   Store,
   Trophy,
@@ -39,6 +40,9 @@ export const navSections: NavSection[] = [
   },
   {
     title: "System",
-    items: [{ title: "Settings", href: "/settings", icon: Settings }],
+    items: [
+      { title: "Admin management", href: "/admins", icon: ShieldCheck },
+      { title: "Settings", href: "/settings", icon: Settings },
+    ],
   },
 ];

@@ -18,6 +18,10 @@ import {
 } from "@/lib/api/brilliant-moves";
 import {
   getMemberVenues,
+  getMemberActivity,
+  getMemberMatchHistory,
+  cancelMemberMatch,
+  requestMemberMatchEnd,
   getVenueTables,
   joinVenueTable,
   leaveVenueTable,
@@ -30,6 +34,8 @@ import {
 export const memberKeys = {
   profile: ["member", "profile"] as const,
   venues: ["member", "venues"] as const,
+  activity: ["member", "activity"] as const,
+  matchHistory: ["member", "match-history"] as const,
   tables: (venueId: number) => ["member", "venues", venueId, "tables"] as const,
   brilliantMoves: ["member", "brilliant-moves"] as const,
 };
@@ -40,6 +46,22 @@ export function useMemberProfile() {
 
 export function useMemberVenues() {
   return useQuery({ queryKey: memberKeys.venues, queryFn: getMemberVenues });
+}
+
+export function useMemberActivity(enabled = true) {
+  return useQuery({
+    queryKey: memberKeys.activity,
+    queryFn: getMemberActivity,
+    enabled,
+    refetchInterval: 15_000,
+  });
+}
+
+export function useMemberMatchHistory() {
+  return useQuery({
+    queryKey: memberKeys.matchHistory,
+    queryFn: getMemberMatchHistory,
+  });
 }
 
 export function useVenueTables(venueId: number) {
@@ -107,6 +129,9 @@ export function useJoinVenueTable() {
     mutationFn: joinVenueTable,
     onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: ["member", "venues"] });
+      await queryClient.invalidateQueries({
+        queryKey: memberKeys.activity,
+      });
       toast.success(result.message || "You're at the board. Make your move.");
     },
     onError: (error: Error) => toast.error(error.message),
@@ -119,7 +144,42 @@ export function useLeaveVenueTable() {
     mutationFn: leaveVenueTable,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["member", "venues"] });
+      await queryClient.invalidateQueries({
+        queryKey: memberKeys.activity,
+      });
       toast.success("All good. Your table is free again.");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+}
+
+export function useCancelMemberMatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: cancelMemberMatch,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: memberKeys.activity });
+      await queryClient.invalidateQueries({ queryKey: memberKeys.venues });
+      toast.success("Match canceled. The table is available again.");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+}
+
+export function useRequestMemberMatchEnd() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      matchId,
+      loserUserId,
+    }: {
+      matchId: number;
+      loserUserId: string;
+    }) => requestMemberMatchEnd(matchId, loserUserId),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: memberKeys.activity });
+      await queryClient.invalidateQueries({ queryKey: memberKeys.venues });
+      toast.success(result.message);
     },
     onError: (error: Error) => toast.error(error.message),
   });

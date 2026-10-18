@@ -1,8 +1,15 @@
 import { apiClient } from "@/lib/api/client";
-import type { ApiResponse, Member } from "@/types/api";
+import type { AdminMemberDetails, ApiResponse, Member } from "@/types/api";
 
 export async function getMembers() {
   const response = await apiClient.get<ApiResponse<Member[]>>("/api/members");
+  return response.data.data;
+}
+
+export async function getAdminMemberDetails(id: string) {
+  const response = await apiClient.get<ApiResponse<AdminMemberDetails>>(
+    `/api/members/admin/${encodeURIComponent(id)}/details`,
+  );
   return response.data.data;
 }
 

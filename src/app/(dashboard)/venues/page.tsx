@@ -2,7 +2,14 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createColumnHelper } from "@tanstack/react-table";
-import { ArrowUpRight, MapPin, Plus } from "lucide-react";
+import {
+  ArrowUpRight,
+  Eye,
+  MapPin,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -10,6 +17,12 @@ import { DataTable } from "@/components/shared/data-table";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +35,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { VenueOverviewDialog } from "@/components/venues/venue-overview-dialog";
 import { useVenueActions, useVenues } from "@/hooks/use-venues";
 import type { Venue } from "@/types/api";
 
@@ -35,6 +50,8 @@ const column = createColumnHelper<Venue>();
 
 export default function VenuesPage() {
   const [open, setOpen] = useState(false);
+  const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
+  const [viewingVenueId, setViewingVenueId] = useState<number | null>(null);
   const venues = useVenues();
   const actions = useVenueActions();
   const form = useForm<z.input<typeof venueSchema>, unknown, VenueForm>({
@@ -57,23 +74,95 @@ export default function VenuesPage() {
         (row) => (row.vendor_id ? `Owner #${row.vendor_id}` : "Not assigned"),
         { id: "owner", header: "Owner" },
       ),
-      column.accessor((row) => (row.status === 0 ? "Inactive" : "Active"), {
+      column.accessor((row) => row.status !== 0, {
         id: "status",
-        header: "Status",
-        cell: ({ getValue }) => (
-          <StatusBadge tone={getValue() === "Active" ? "success" : "neutral"}>
-            {getValue()}
-          </StatusBadge>
+        header: "Active",
+        cell: ({ getValue, row }) => {
+          const active = getValue();
+          return (
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={active}
+                disabled={actions.update.isPending}
+                aria-label={`${active ? "Deactivate" : "Activate"} ${row.original.name}`}
+                onCheckedChange={(checked) =>
+                  actions.update.mutate({
+                    id: row.original.id,
+                    input: { status: checked ? 1 : 0 },
+                  })
+                }
+              />
+              <StatusBadge tone={active ? "success" : "neutral"}>
+                {active ? "Active" : "Inactive"}
+              </StatusBadge>
+            </div>
+          );
+        },
+      }),
+      column.display({
+        id: "actions",
+        header: "",
+        cell: ({ row }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Actions for ${row.original.name}`}
+                />
+              }
+            >
+              <MoreHorizontal />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => setViewingVenueId(row.original.id)}
+              >
+                <Eye /> View venue
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditingVenue(row.original);
+                  form.reset({
+                    name: row.original.name,
+                    address: row.original.address ?? "",
+                    commission: row.original.commission ?? 0,
+                  });
+                  setOpen(true);
+                }}
+              >
+                <Pencil /> Edit venue
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ),
       }),
     ],
-    [],
+    [actions.update, form],
   );
 
   function submit(values: VenueForm) {
+    if (editingVenue) {
+      actions.update.mutate(
+        {
+          id: editingVenue.id,
+          input: values,
+        },
+        {
+          onSuccess: () => {
+            form.reset({ name: "", address: "", commission: 0 });
+            setEditingVenue(null);
+            setOpen(false);
+          },
+        },
+      );
+      return;
+    }
     actions.create.mutate(values, {
       onSuccess: () => {
         form.reset({ name: "", address: "", commission: 0 });
+        setEditingVenue(null);
         setOpen(false);
       },
     });
@@ -85,15 +174,37 @@ export default function VenuesPage() {
         title="Venues"
         description="The places where our community meets over the board."
         action={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger render={<Button />}>
+          <Dialog
+            open={open}
+            onOpenChange={(nextOpen) => {
+              setOpen(nextOpen);
+              if (!nextOpen) {
+                setEditingVenue(null);
+                form.reset({ name: "", address: "", commission: 0 });
+              }
+            }}
+          >
+            <DialogTrigger
+              render={
+                <Button
+                  onClick={() => {
+                    setEditingVenue(null);
+                    form.reset({ name: "", address: "", commission: 0 });
+                  }}
+                />
+              }
+            >
               <Plus /> Add a venue
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add a venue</DialogTitle>
+                <DialogTitle>
+                  {editingVenue ? "Edit venue" : "Add a venue"}
+                </DialogTitle>
                 <DialogDescription>
-                  Bring another welcoming place to the board.
+                  {editingVenue
+                    ? "Update this venue's details."
+                    : "Bring another welcoming place to the board."}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={form.handleSubmit(submit)} className="space-y-4">
@@ -120,8 +231,17 @@ export default function VenuesPage() {
                   />
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={actions.create.isPending}>
-                    {actions.create.isPending ? "Saving..." : "Create venue"}{" "}
+                  <Button
+                    type="submit"
+                    disabled={
+                      actions.create.isPending || actions.update.isPending
+                    }
+                  >
+                    {actions.create.isPending || actions.update.isPending
+                      ? "Saving..."
+                      : editingVenue
+                        ? "Save changes"
+                        : "Create venue"}{" "}
                     <ArrowUpRight />
                   </Button>
                 </DialogFooter>
@@ -149,6 +269,13 @@ export default function VenuesPage() {
         <MapPin className="size-4 text-primary" /> Every venue makes the game
         easier to find.
       </div>
+      <VenueOverviewDialog
+        venueId={viewingVenueId}
+        open={viewingVenueId !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setViewingVenueId(null);
+        }}
+      />
     </div>
   );
 }

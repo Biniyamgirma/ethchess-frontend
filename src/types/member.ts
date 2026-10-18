@@ -45,6 +45,40 @@ export type VenueTable = {
   is_available: boolean;
 };
 
+export type MemberActivity =
+  | {
+      type: "waiting_table";
+      table_id: number;
+      table_name: string | null;
+      venue_id: number;
+      venue_name: string | null;
+    }
+  | {
+      type: "active_match";
+      match_id: number;
+      status: string;
+      started_at: string | null;
+      white_player: { id: string; name: string } | null;
+      black_player: { id: string; name: string } | null;
+      table_id: number | null;
+      table_name: string | null;
+      venue_id: number | null;
+      venue_name: string | null;
+      pending_loser_name: string | null;
+    };
+
+export type MemberMatchHistory = {
+  id: number;
+  started_at: string | null;
+  game_end_at: string | null;
+  total_minutes: number;
+  venue_name: string;
+  white_player_name: string;
+  black_player_name: string;
+  winner_id: string;
+  result: "won" | "lost";
+};
+
 export type Match = {
   id: number;
   started_at: string | null;

@@ -49,11 +49,15 @@ export function AppSidebar() {
   const visibleNavSections = navSections
     .map((section) => ({
       ...section,
-      items: section.items.filter(
-        (item) =>
-          item.href !== "/venue-owners" ||
-          (adminAccess.data?.admin_level ?? 0) > 2,
-      ),
+      items: section.items.filter((item) => {
+        if (item.href === "/venue-owners") {
+          return (adminAccess.data?.admin_level ?? 0) > 2;
+        }
+        if (item.href === "/admins") {
+          return (adminAccess.data?.admin_level ?? 0) > 5;
+        }
+        return true;
+      }),
     }))
     .filter((section) => section.items.length > 0);
   const name = user

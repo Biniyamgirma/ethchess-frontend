@@ -71,6 +71,7 @@ apiClient.interceptors.response.use(
               "/brilliant-moves",
               "/bookings",
               "/settings",
+              "/admins",
             ].some(
               (path) =>
                 window.location.pathname === path ||
