@@ -1,9 +1,10 @@
 import axios from "axios";
+import { env } from "@/config/env";
 import { clearMemberSession } from "@/lib/auth/member-storage";
 import { clearAdminUser } from "@/lib/auth/storage";
 
 export const apiClient = axios.create({
-  baseURL: "",
+  baseURL: env.NEXT_PUBLIC_API_BASE_URL,
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
