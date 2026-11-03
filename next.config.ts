@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  experimental: {
+    agentUpgrade: "security",
+  },
   allowedDevOrigins: ["192.168.43.72", "192.168.1.143", "192.168.43.212"],
   async rewrites() {
     const backendUrl = (
