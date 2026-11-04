@@ -50,7 +50,7 @@ export function Logo({ variant = "horizontal", className }: LogoProps) {
       ? { width: 38, height: 38 }
       : variant === "vertical"
         ? { width: 148, height: 108 }
-        : { width: 164, height: 34 };
+        : { width: 160, height: 32 };
 
   return (
     <Image
@@ -58,6 +58,7 @@ export function Logo({ variant = "horizontal", className }: LogoProps) {
       alt={variant === "icon" ? "EthChess" : "EthChess™"}
       width={dimensions.width}
       height={dimensions.height}
+      style={{ height: "auto" }}
       priority
       className={className}
     />

@@ -96,12 +96,15 @@ export type BrilliantMove = {
   user_id: string | null;
   platform: string | null;
   move_url: string | null;
+  week_id?: number | null;
   createdAt: string;
   updatedAt: string;
   week_number: number | null;
   week_start?: string;
   rank: number | null;
   is_awarded: number | null;
+  is_winner?: boolean;
+  is_featured?: boolean;
   is_deleted?: number | null;
   vote_count: number;
   total_votes: number;
@@ -110,6 +113,7 @@ export type BrilliantMove = {
   is_own: boolean;
   week_end?: string;
   weighted_vote_count?: number;
+  winner_announced_at?: string | null;
 };
 
 export type MembershipTier = {

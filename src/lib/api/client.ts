@@ -1,10 +1,7 @@
 import axios from "axios";
-import { env } from "@/config/env";
-import { clearMemberSession } from "@/lib/auth/member-storage";
-import { clearAdminUser } from "@/lib/auth/storage";
 
 export const apiClient = axios.create({
-  baseURL: env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000",
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
@@ -22,6 +19,18 @@ export class ApiError extends Error {
     this.name = "ApiError";
     this.status = input.status;
     this.fieldErrors = input.fieldErrors;
+  }
+}
+
+function clearMemberSession(): void {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem("memberUser");
+  }
+}
+
+function clearAdminUser(): void {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem("adminUser");
   }
 }
 

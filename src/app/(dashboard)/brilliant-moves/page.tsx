@@ -14,18 +14,23 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import {
+  announceCurrentWeekWinner,
+  getAdminThisWeeksBrilliantMoves,
   getAllBrilliantMoves,
   getThisWeeksBrilliantMoves,
   getWeeklyBrilliantMoveWinners,
+  setAdminFeaturedBrilliantMove,
   setBrilliantMoveVote,
   type BrilliantMoveSort,
   type PaginatedBrilliantMoves,
 } from "@/lib/api/brilliant-moves";
+import { getCurrentAdminAccess } from "@/lib/api/admin";
 import type { BrilliantMove } from "@/types/member";
 
 const queryKeys = {
   root: ["admin-brilliant-moves"] as const,
   thisWeek: ["admin-brilliant-moves", "this-week"] as const,
+  adminThisWeek: ["admin-brilliant-moves", "admin-this-week"] as const,
   all: (page: number, sort: BrilliantMoveSort) =>
     ["admin-brilliant-moves", "all", page, sort] as const,
   winners: ["admin-brilliant-moves", "winners"] as const,
@@ -38,11 +43,21 @@ export default function BrilliantMovesPage() {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<BrilliantMoveSort>("newest");
   const queryClient = useQueryClient();
+  const adminAccess = useQuery({
+    queryKey: ["current-admin-access"],
+    queryFn: getCurrentAdminAccess,
+  });
+  const canManageWeeklyMoves = (adminAccess.data?.admin_level ?? 0) > 5;
 
   const thisWeek = useQuery({
     queryKey: queryKeys.thisWeek,
     queryFn: getThisWeeksBrilliantMoves,
-    enabled: tab === "this-week",
+    enabled: tab === "this-week" && !canManageWeeklyMoves,
+  });
+  const adminThisWeek = useQuery({
+    queryKey: queryKeys.adminThisWeek,
+    queryFn: getAdminThisWeeksBrilliantMoves,
+    enabled: tab === "this-week" && canManageWeeklyMoves,
   });
   const allMoves = useQuery({
     queryKey: queryKeys.all(page, sort),
@@ -53,6 +68,40 @@ export default function BrilliantMovesPage() {
     queryKey: queryKeys.winners,
     queryFn: getWeeklyBrilliantMoveWinners,
     enabled: tab === "winners",
+  });
+
+  const setFeatured = useMutation({
+    mutationFn: ({
+      id,
+      isFeatured,
+    }: {
+      id: number;
+      isFeatured: boolean;
+    }) => setAdminFeaturedBrilliantMove(id, isFeatured),
+    onSuccess: async (_move, variables) => {
+      toast.success(
+        variables.isFeatured
+          ? "This move is now featured for the week."
+          : "The featured move was removed.",
+      );
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminThisWeek });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const announceWinner = useMutation({
+    mutationFn: announceCurrentWeekWinner,
+    onSuccess: async (winner) => {
+      toast.success(`Winner announced for the week of ${winner.week_start}.`);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.adminThisWeek }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.winners }),
+        queryClient.invalidateQueries({
+          queryKey: ["admin-brilliant-moves", "latest-winner"],
+        }),
+      ]);
+    },
+    onError: (error: Error) => toast.error(error.message),
   });
 
   const vote = useMutation({
@@ -98,6 +147,7 @@ export default function BrilliantMovesPage() {
     onSettled: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.thisWeek }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.adminThisWeek }),
         queryClient.invalidateQueries({ queryKey: ["admin-brilliant-moves", "all"] }),
       ]);
     },
@@ -132,16 +182,70 @@ export default function BrilliantMovesPage() {
         </TabsList>
 
         <TabsContent value="this-week">
-          <MoveList
-            isPending={thisWeek.isPending}
-            error={thisWeek.error}
-            moves={thisWeek.data}
-            empty="No moves have been submitted this week yet."
-            votePending={vote.isPending}
-            onVote={(move) =>
-              vote.mutate({ id: move.id, hasVoted: move.current_user_voted })
-            }
-          />
+          <div className="space-y-4">
+            {canManageWeeklyMoves ? (
+              <section className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="font-heading font-semibold">
+                    Weekly winner controls
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Feature one move or announce this week&apos;s winner.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  disabled={
+                    announceWinner.isPending ||
+                    !adminThisWeek.data?.length ||
+                    adminThisWeek.data.some((move) => move.is_winner)
+                  }
+                  onClick={() => announceWinner.mutate()}
+                >
+                  {announceWinner.isPending
+                    ? "Announcing..."
+                    : adminThisWeek.data?.some((move) => move.is_winner)
+                      ? "Winner announced"
+                      : "Announce winner"}
+                </Button>
+              </section>
+            ) : null}
+            <MoveList
+              isPending={
+                canManageWeeklyMoves
+                  ? adminThisWeek.isPending
+                  : thisWeek.isPending
+              }
+              error={
+                canManageWeeklyMoves ? adminThisWeek.error : thisWeek.error
+              }
+              moves={
+                canManageWeeklyMoves
+                  ? adminThisWeek.data
+                  : thisWeek.data
+              }
+              empty="No moves have been submitted this week yet."
+              votePending={vote.isPending}
+              onVote={(move) =>
+                vote.mutate({ id: move.id, hasVoted: move.current_user_voted })
+              }
+              onFeature={
+                canManageWeeklyMoves
+                  ? (move) =>
+                      setFeatured.mutate({
+                        id: move.id,
+                        isFeatured: !move.is_featured,
+                      })
+                  : undefined
+              }
+              featurePendingId={
+                setFeatured.isPending ? setFeatured.variables?.id ?? null : null
+              }
+              featureDisabled={
+                adminThisWeek.data?.some((move) => move.is_winner) ?? false
+              }
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="all" className="space-y-4">
@@ -227,6 +331,9 @@ function MoveList({
   empty,
   votePending,
   onVote,
+  onFeature,
+  featurePendingId = null,
+  featureDisabled = false,
 }: {
   isPending: boolean;
   error: Error | null;
@@ -234,6 +341,9 @@ function MoveList({
   empty: string;
   votePending: boolean;
   onVote: (move: BrilliantMove) => void;
+  onFeature?: (move: BrilliantMove) => void;
+  featurePendingId?: number | null;
+  featureDisabled?: boolean;
 }) {
   if (isPending) {
     return (
@@ -261,12 +371,30 @@ function MoveList({
   return (
     <div className="grid gap-3">
       {moves.map((move) => (
-        <BrilliantMoveCard
-          key={`${move.id}-${move.week_start ?? "move"}`}
-          move={move}
-          isPending={votePending}
-          onVote={() => onVote(move)}
-        />
+        <div key={`${move.id}-${move.week_start ?? "move"}`} className="space-y-2">
+          <BrilliantMoveCard
+            move={move}
+            isPending={votePending}
+            onVote={() => onVote(move)}
+          />
+          {onFeature ? (
+            <Button
+              type="button"
+              variant={move.is_featured ? "secondary" : "outline"}
+              disabled={
+                featureDisabled ||
+                (featurePendingId !== null && featurePendingId !== undefined)
+              }
+              onClick={() => onFeature(move)}
+            >
+              {featurePendingId === move.id
+                ? "Saving..."
+                : move.is_featured
+                  ? "Remove this week's brilliant move"
+                  : "Make this week's brilliant move"}
+            </Button>
+          ) : null}
+        </div>
       ))}
     </div>
   );

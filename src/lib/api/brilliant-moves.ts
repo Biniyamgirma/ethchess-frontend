@@ -37,6 +37,39 @@ export async function getWeeklyBrilliantMoveWinners() {
   return response.data.data;
 }
 
+export async function getLatestBrilliantMoveWinner() {
+  const response = await apiClient.get<ApiResponse<BrilliantMove | null>>(
+    "/api/brilliant-moves/latest-winner",
+  );
+  return response.data.data;
+}
+
+export async function getAdminThisWeeksBrilliantMoves() {
+  const response = await apiClient.get<ApiResponse<BrilliantMove[]>>(
+    "/api/brilliant-moves/admin/this-week",
+  );
+  return response.data.data;
+}
+
+export async function setAdminFeaturedBrilliantMove(
+  id: number,
+  isFeatured: boolean,
+) {
+  const response = await apiClient.patch<ApiResponse<BrilliantMove>>(
+    `/api/brilliant-moves/admin/${id}/featured`,
+    { is_featured: isFeatured },
+  );
+  return response.data.data;
+}
+
+export async function announceCurrentWeekWinner() {
+  const response = await apiClient.post<ApiResponse<BrilliantMove>>(
+    "/api/brilliant-moves/admin/announce-winner",
+    {},
+  );
+  return response.data.data;
+}
+
 export async function getBrilliantMoves() {
   const response = await apiClient.get<ApiResponse<BrilliantMove[]>>(
     "/api/brilliant-moves",

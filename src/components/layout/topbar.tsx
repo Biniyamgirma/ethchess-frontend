@@ -36,9 +36,8 @@ export function Topbar() {
     }
   }
 
-  const name = user
-    ? `${user.f_name} ${user.l_name ?? ""}`.trim()
-    : "Club admin";
+  const name =
+    [user?.f_name, user?.l_name].filter(Boolean).join(" ") || "Club admin";
 
   return (
     <div className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">

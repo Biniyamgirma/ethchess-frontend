@@ -73,7 +73,7 @@ export function ActivityOverview() {
   if (summary.isError) {
     return (
       <section className="mt-8" aria-label="Club activity overview">
-        <p className="rounded-xl border border-accent/40 bg-accent/10 p-5 text-sm">
+        <p className="rounded-xl border border-accent/40 bg-accent/10 p-5 text-sm text-accent">
           {summary.error.message}
         </p>
       </section>

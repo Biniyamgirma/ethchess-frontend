@@ -58,8 +58,8 @@ export default function LoginPage() {
           <Image
             src="/brand/logo-white.svg"
             alt="EthChess™"
-            width={164}
-            height={34}
+            width={160}
+            height={32}
             priority
           />
         </div>
@@ -103,7 +103,7 @@ export default function LoginPage() {
           <div className="mb-10 flex items-center justify-between lg:hidden">
             <Logo />
             <span className="font-heading text-[10px] font-semibold tracking-[0.14em] text-muted-foreground">
-              CLUB ADMIN
+              CLUB ADMIN  
             </span>
           </div>
           <p className="mb-3 font-heading text-xs font-semibold uppercase tracking-[0.18em] text-primary">

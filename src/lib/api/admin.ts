@@ -9,8 +9,12 @@ import type {
 
 export async function loginAdmin(input: { f_name: string; password: string }) {
   const response = await apiClient.post<ApiResponse<{ user: AdminUser }>>(
-    "/api/admins/login",
-    input,
+    "/api/auth/login",
+    {
+      identifier: input.f_name,
+      password: input.password,
+      role: "admin",
+    },
   );
   return response.data.data.user;
 }
