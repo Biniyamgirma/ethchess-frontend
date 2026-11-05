@@ -23,6 +23,19 @@ export interface AdminAccess {
   admin_level: number;
 }
 
+export interface ClubMessageBroadcast {
+  id: number;
+  content: string | null;
+  created_by: number | null;
+  status: "draft" | "sending" | "sent" | "failed";
+  sent_at: string | null;
+  total_recipients: number;
+  success_count: number;
+  failure_count: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Member {
   id: string;
   f_name?: string | null;
@@ -93,6 +106,7 @@ export interface Venue {
   commission?: number;
   status?: number | null;
   vendor_id?: number | null;
+  is_deleted?: number | null;
 }
 
 export interface VenueTable {

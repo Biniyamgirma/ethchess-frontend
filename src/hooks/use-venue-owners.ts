@@ -22,6 +22,7 @@ export function useVenueOwnerActions() {
   const queryClient = useQueryClient();
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["venue-owners"] });
+    void queryClient.invalidateQueries({ queryKey: ["venues"] });
   };
   const create = useMutation({
     mutationFn: createVenueOwner,

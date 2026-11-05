@@ -17,6 +17,7 @@ const labels: Record<string, string> = {
   "venue-owners": "Venue owners",
   venues: "Venues",
   "brilliant-moves": "Brilliant Move",
+  "broadcast-message": "Broadcast Message",
   bookings: "Bookings",
   settings: "Settings",
 };

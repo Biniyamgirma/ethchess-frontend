@@ -19,7 +19,7 @@ import {
   getAllBrilliantMoves,
   getThisWeeksBrilliantMoves,
   getWeeklyBrilliantMoveWinners,
-  setAdminFeaturedBrilliantMove,
+  selectAdminWeeklyWinner,
   setBrilliantMoveVote,
   type BrilliantMoveSort,
   type PaginatedBrilliantMoves,
@@ -70,20 +70,10 @@ export default function BrilliantMovesPage() {
     enabled: tab === "winners",
   });
 
-  const setFeatured = useMutation({
-    mutationFn: ({
-      id,
-      isFeatured,
-    }: {
-      id: number;
-      isFeatured: boolean;
-    }) => setAdminFeaturedBrilliantMove(id, isFeatured),
-    onSuccess: async (_move, variables) => {
-      toast.success(
-        variables.isFeatured
-          ? "This move is now featured for the week."
-          : "The featured move was removed.",
-      );
+  const selectWinner = useMutation({
+    mutationFn: selectAdminWeeklyWinner,
+    onSuccess: async () => {
+      toast.success("Weekly winner selected.");
       await queryClient.invalidateQueries({ queryKey: queryKeys.adminThisWeek });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -190,14 +180,14 @@ export default function BrilliantMovesPage() {
                     Weekly winner controls
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Feature one move or announce this week&apos;s winner.
+                    Review this week&apos;s moves and select one winner on Saturday.
                   </p>
                 </div>
                 <Button
                   type="button"
                   disabled={
                     announceWinner.isPending ||
-                    !adminThisWeek.data?.length ||
+                    !adminThisWeek.data?.some((move) => move.is_featured) ||
                     adminThisWeek.data.some((move) => move.is_winner)
                   }
                   onClick={() => announceWinner.mutate()}
@@ -229,19 +219,15 @@ export default function BrilliantMovesPage() {
               onVote={(move) =>
                 vote.mutate({ id: move.id, hasVoted: move.current_user_voted })
               }
-              onFeature={
+              onSelectWinner={
                 canManageWeeklyMoves
-                  ? (move) =>
-                      setFeatured.mutate({
-                        id: move.id,
-                        isFeatured: !move.is_featured,
-                      })
+                  ? (move) => selectWinner.mutate(move.id)
                   : undefined
               }
-              featurePendingId={
-                setFeatured.isPending ? setFeatured.variables?.id ?? null : null
+              winnerSelectionPendingId={
+                selectWinner.isPending ? selectWinner.variables : null
               }
-              featureDisabled={
+              winnerSelectionDisabled={
                 adminThisWeek.data?.some((move) => move.is_winner) ?? false
               }
             />
@@ -331,9 +317,9 @@ function MoveList({
   empty,
   votePending,
   onVote,
-  onFeature,
-  featurePendingId = null,
-  featureDisabled = false,
+  onSelectWinner,
+  winnerSelectionPendingId = null,
+  winnerSelectionDisabled = false,
 }: {
   isPending: boolean;
   error: Error | null;
@@ -341,9 +327,9 @@ function MoveList({
   empty: string;
   votePending: boolean;
   onVote: (move: BrilliantMove) => void;
-  onFeature?: (move: BrilliantMove) => void;
-  featurePendingId?: number | null;
-  featureDisabled?: boolean;
+  onSelectWinner?: (move: BrilliantMove) => void;
+  winnerSelectionPendingId?: number | null;
+  winnerSelectionDisabled?: boolean;
 }) {
   if (isPending) {
     return (
@@ -377,21 +363,22 @@ function MoveList({
             isPending={votePending}
             onVote={() => onVote(move)}
           />
-          {onFeature ? (
+          {onSelectWinner ? (
             <Button
               type="button"
               variant={move.is_featured ? "secondary" : "outline"}
               disabled={
-                featureDisabled ||
-                (featurePendingId !== null && featurePendingId !== undefined)
+                winnerSelectionDisabled ||
+                (winnerSelectionPendingId !== null &&
+                  winnerSelectionPendingId !== undefined)
               }
-              onClick={() => onFeature(move)}
+              onClick={() => onSelectWinner(move)}
             >
-              {featurePendingId === move.id
-                ? "Saving..."
+              {winnerSelectionPendingId === move.id
+                ? "Selecting..."
                 : move.is_featured
-                  ? "Remove this week's brilliant move"
-                  : "Make this week's brilliant move"}
+                  ? "Selected as this week's winner"
+                  : "Select as this week's winner"}
             </Button>
           ) : null}
         </div>

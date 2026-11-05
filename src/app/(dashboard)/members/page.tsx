@@ -93,15 +93,17 @@ export default function MembersPage() {
       column.accessor((row) => row.role ?? "—", {
         id: "role",
         header: "Role",
-        cell: ({ getValue }) =>
-          getValue() === "official-member" ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-xs font-medium text-sky-700 dark:text-sky-300">
-              <BadgeCheck className="size-3.5 fill-sky-500/15" />
-              official-member
-            </span>
-          ) : (
+        cell: ({ getValue, row }) => (
+          <div className="flex flex-wrap items-center gap-2">
             <span>{getValue()}</span>
-          ),
+            {row.original.is_member === 1 ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-1 text-xs font-medium text-sky-700 dark:text-sky-300">
+                <BadgeCheck className="size-3.5 fill-sky-500/15" />
+                Official member
+              </span>
+            ) : null}
+          </div>
+        ),
       }),
       column.display({
         id: "actions",

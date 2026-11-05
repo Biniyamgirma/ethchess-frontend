@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ArrowUpRight, ExternalLink, MoveUpRight, Trophy } from "lucide-react";
@@ -13,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getBrilliantMoveSubmissionStatus } from "@/lib/api/brilliant-moves";
 import {
   useBrilliantMoves,
   useSubmitBrilliantMove,
@@ -26,6 +28,11 @@ const moveSchema = z.object({
 type MoveValues = z.infer<typeof moveSchema>;
 
 export default function BrilliantMovesPage() {
+  const submissionStatus = useQuery({
+    queryKey: ["brilliant-move-submission-status"],
+    queryFn: getBrilliantMoveSubmissionStatus,
+    refetchInterval: 60_000,
+  });
   const moves = useBrilliantMoves();
   const submit = useSubmitBrilliantMove();
   const vote = useVoteForBrilliantMove();
@@ -51,6 +58,15 @@ export default function BrilliantMovesPage() {
       <Card className="mb-8 shadow-none">
         <CardContent className="p-5 sm:p-7">
           <h2 className="font-heading text-lg font-bold">Share a move</h2>
+          {submissionStatus.data?.submissions_open === false ? (
+            <p
+              role="status"
+              className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm"
+            >
+              {submissionStatus.data.message ??
+                "Submissions are closed, save this link and submit again on Monday to Friday."}
+            </p>
+          ) : null}
           <form
             className="mt-4 flex flex-col gap-3 sm:flex-row"
             onSubmit={handleSubmit(submitMove)}
@@ -73,7 +89,10 @@ export default function BrilliantMovesPage() {
             <Button
               type="submit"
               className="min-h-12"
-              disabled={submit.isPending}
+              disabled={
+                submit.isPending ||
+                submissionStatus.data?.submissions_open === false
+              }
             >
               {submit.isPending ? "Sharing..." : "Share your move"}{" "}
               <ArrowUpRight />

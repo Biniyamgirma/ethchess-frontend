@@ -3,6 +3,13 @@ import type { ApiResponse, BrilliantMove } from "@/types/member";
 
 export type BrilliantMoveSort = "newest" | "most_votes";
 
+export interface BrilliantMoveSubmissionStatus {
+  submissions_open: boolean;
+  timezone: string;
+  reopen_at: string | null;
+  message: string | null;
+}
+
 export interface PaginatedBrilliantMoves {
   items: BrilliantMove[];
   page: number;
@@ -15,6 +22,13 @@ export interface PaginatedBrilliantMoves {
 export async function getThisWeeksBrilliantMoves() {
   const response = await apiClient.get<ApiResponse<BrilliantMove[]>>(
     "/api/brilliant-moves/this-week",
+  );
+  return response.data.data;
+}
+
+export async function getBrilliantMoveSubmissionStatus() {
+  const response = await apiClient.get<ApiResponse<BrilliantMoveSubmissionStatus>>(
+    "/api/brilliant-moves/status",
   );
   return response.data.data;
 }
@@ -58,6 +72,13 @@ export async function setAdminFeaturedBrilliantMove(
   const response = await apiClient.patch<ApiResponse<BrilliantMove>>(
     `/api/brilliant-moves/admin/${id}/featured`,
     { is_featured: isFeatured },
+  );
+  return response.data.data;
+}
+
+export async function selectAdminWeeklyWinner(id: number) {
+  const response = await apiClient.post<ApiResponse<BrilliantMove>>(
+    `/api/brilliant-moves/admin/${id}/select-winner`,
   );
   return response.data.data;
 }

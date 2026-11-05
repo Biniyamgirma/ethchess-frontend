@@ -13,6 +13,7 @@ export interface CreateVenueOwnerInput {
   password: string;
   phone_number: string;
   email: string;
+  venue_id: number;
   telegram_username?: string;
   whats_up_username?: string;
 }

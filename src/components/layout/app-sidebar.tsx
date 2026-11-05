@@ -56,6 +56,9 @@ export function AppSidebar() {
         if (item.href === "/admins") {
           return (adminAccess.data?.admin_level ?? 0) > 5;
         }
+        if (item.href === "/broadcast-message") {
+          return (adminAccess.data?.admin_level ?? 0) > 10;
+        }
         return true;
       }),
     }))

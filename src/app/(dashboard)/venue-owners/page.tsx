@@ -36,6 +36,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVenueOwnerActions, useVenueOwners } from "@/hooks/use-venue-owners";
+import { useVenues } from "@/hooks/use-venues";
 import { getCurrentAdminAccess } from "@/lib/api/admin";
 import type { VenueOwner } from "@/types/api";
 
@@ -46,6 +47,7 @@ const ownerSchema = z.object({
   phone_number: z.string().trim().min(5, "Enter a valid phone number."),
   telegram_username: z.string().trim().optional().or(z.literal("")),
   whats_up_username: z.string().trim().optional().or(z.literal("")),
+  venue_id: z.string().min(1, "Select a venue for this owner."),
   password: z
     .string()
     .refine(
@@ -65,6 +67,14 @@ export default function VenueOwnersPage() {
   });
   const canManageOwners = (adminAccess.data?.admin_level ?? 0) > 2;
   const owners = useVenueOwners(canManageOwners);
+  const venues = useVenues();
+  const availableVenues = venues.data?.filter(
+    (venue) =>
+      venue.status !== 0 &&
+      venue.is_deleted !== 1 &&
+      venue.vendor_id == null &&
+      owners.data?.every((owner) => owner.venue_id !== venue.id),
+  );
   const ownerActions = useVenueOwnerActions();
   const form = useForm<OwnerFormValues>({
     resolver: zodResolver(ownerSchema),
@@ -75,6 +85,7 @@ export default function VenueOwnersPage() {
       phone_number: "",
       telegram_username: "",
       whats_up_username: "",
+      venue_id: "",
       password: "",
     },
   });
@@ -94,6 +105,15 @@ export default function VenueOwnersPage() {
         id: "contact",
         header: "Contact",
       }),
+      column.accessor(
+        (row) =>
+          venues.data?.find((venue) => venue.id === row.venue_id)?.name ??
+          (row.venue_id ? `Venue #${row.venue_id}` : "—"),
+        {
+          id: "venue",
+          header: "Venue",
+        },
+      ),
       column.accessor((row) => row.telegram_username ?? "—", {
         id: "telegram",
         header: "Telegram",
@@ -146,6 +166,7 @@ export default function VenueOwnersPage() {
                       phone_number: owner.phone_number ?? "",
                       telegram_username: owner.telegram_username ?? "",
                       whats_up_username: owner.whats_up_username ?? "",
+                      venue_id: String(owner.venue_id ?? ""),
                       password: "",
                     });
                     setOpen(true);
@@ -171,7 +192,7 @@ export default function VenueOwnersPage() {
         },
       }),
     ],
-    [form, ownerActions.setBlocked],
+    [form, ownerActions.setBlocked, venues.data],
   );
 
   function submit(values: OwnerFormValues) {
@@ -211,6 +232,7 @@ export default function VenueOwnersPage() {
         phone_number: values.phone_number,
         telegram_username: values.telegram_username || "",
         whats_up_username: values.whats_up_username || "",
+        venue_id: Number(values.venue_id),
         password: values.password,
       },
       {
@@ -281,7 +303,7 @@ export default function VenueOwnersPage() {
                 <DialogDescription>
                   {editingOwner
                     ? "Update contact information. Leave password blank to keep the current password."
-                    : "Create a venue owner account with the requested contact information. Passwords are securely hashed before storage."}
+                    : "Create an owner account and assign one available venue. Passwords are securely hashed before storage."}
                 </DialogDescription>
               </DialogHeader>
               <form
@@ -372,6 +394,56 @@ export default function VenueOwnersPage() {
                   ) : null}
                 </div>
                 <div className="space-y-1.5">
+                  {!editingOwner ? (
+                    <>
+                      <Label htmlFor="owner-venue" >Venue</Label>
+                      <select
+                        id="owner-venue"
+                        className="h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm "
+                        {...form.register("venue_id")}
+                        disabled={
+                          venues.isPending ||
+                          venues.isError ||
+                          owners.isPending ||
+                          owners.isError
+                        }
+                      >
+                        <option value="">Select a venue</option>
+                        {availableVenues?.map((venue) => (
+                          <option key={venue.id} value={venue.id} className="capitalize text-sm text-muted-foreground border-b border-border bg-card">
+                            {venue.name}
+                          </option>
+                        ))}
+                      </select>
+                      {venues.isError ? (
+                        <p role="alert" className="text-xs text-destructive">
+                          Could not load venues: {venues.error.message}
+                        </p>
+                      ) : null}
+                      {owners.isError ? (
+                        <p role="alert" className="text-xs text-destructive">
+                          Could not check existing venue assignments:{" "}
+                          {owners.error.message}
+                        </p>
+                      ) : null}
+                      {!venues.isPending &&
+                      !venues.isError &&
+                      !owners.isPending &&
+                      !owners.isError &&
+                      availableVenues?.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">
+                          All venues already have an owner.
+                        </p>
+                      ) : null}
+                      {form.formState.errors.venue_id ? (
+                        <p className="text-xs text-accent-foreground">
+                          {form.formState.errors.venue_id.message}
+                        </p>
+                      ) : null}
+                    </>
+                  ) : null}
+                </div>
+                <div className="space-y-1.5">
                   <Label htmlFor="owner-password">Password</Label>
                   <Input
                     id="owner-password"
@@ -395,7 +467,13 @@ export default function VenueOwnersPage() {
                     type="submit"
                     disabled={
                       ownerActions.create.isPending ||
-                      ownerActions.update.isPending
+                      ownerActions.update.isPending ||
+                      (!editingOwner &&
+                        (venues.isPending ||
+                          venues.isError ||
+                          owners.isPending ||
+                          owners.isError ||
+                          availableVenues?.length === 0))
                     }
                   >
                     {ownerActions.create.isPending ||

@@ -2,6 +2,7 @@ import {
   CalendarCheck,
   LayoutDashboard,
   MapPin,
+  MessageSquareText,
   ShieldCheck,
   Settings,
   Store,
@@ -36,6 +37,11 @@ export const navSections: NavSection[] = [
     items: [
       { title: "Brilliant Move", href: "/brilliant-moves", icon: Trophy },
       { title: "Bookings", href: "/bookings", icon: CalendarCheck },
+      {
+        title: "Broadcast Message",
+        href: "/broadcast-message",
+        icon: MessageSquareText,
+      },
     ],
   },
   {
